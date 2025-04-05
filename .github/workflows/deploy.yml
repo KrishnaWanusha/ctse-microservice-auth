@@ -10,7 +10,7 @@ env:
   ECR_REPOSITORY: ctse-microservice-repository
   ECS_CLUSTER: ctse-microservice-cluster
   ECS_SERVICE: ctse-microservice-service
-  ECS_TASK_DEFINITION: ecs/task-def.json
+  ECS_TASK_DEFINITION: ecs/ecs-task-def.json
   CONTAINER_NAME: ctse-microservice-container
 
 jobs:
