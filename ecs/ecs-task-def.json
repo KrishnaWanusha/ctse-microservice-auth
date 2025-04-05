@@ -7,7 +7,7 @@
   "memory": "512",
   "containerDefinitions": [
     {
-      "name": "ctse-microservice",
+      "name": "ctse-microservice-container",
       "image": "351545278583.dkr.ecr.us-east-1.amazonaws.com/ctse-microservice-repository:latest",
       "portMappings": [
         {
