@@ -45,7 +45,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/ctse-microservice",
+          "awslogs-group": "/ecs/ctse-microservice-task",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
         }
