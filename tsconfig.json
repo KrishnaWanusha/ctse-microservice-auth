@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -13,7 +12,11 @@
     "alwaysStrict": true,
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
-
+    "baseUrl": ".",
+    "paths": {
+      "@helpers/*": ["src/helpers/*"],
+      "@models/*": ["src/models/*"]
+    },
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,

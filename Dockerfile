@@ -1,12 +1,26 @@
-FROM node:18.5
+# stage 1
+FROM node:18.5 AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /build
 
 COPY package*.json ./
 RUN npm install
 
-COPY . .
+COPY src/ src/
+COPY tsconfig.json tsconfig.json
+
+RUN npm run build
+
+# stage 2
+FROM node:18.5 AS runner
+
+WORKDIR /app
+
+COPY --from=builder build/package*.json .
+COPY --from=builder build/node_modules node_modules/
+COPY --from=builder build/tsconfig.json tsconfig.json
+COPY --from=builder build/dist dist/
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
