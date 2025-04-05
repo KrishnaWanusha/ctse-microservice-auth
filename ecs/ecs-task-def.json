@@ -45,12 +45,10 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-create-group": "true",
-          "awslogs-group": "/ecs/fused-backend/<env>/<module_name>/api",
+          "awslogs-group": "/ecs/ctse-microservice",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
-        },
-        "secretOptions": []
+        }
       }
     }
   ]
