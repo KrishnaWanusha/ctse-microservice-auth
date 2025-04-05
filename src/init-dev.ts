@@ -1,3 +1,4 @@
+import 'module-alias/register'
 import { errorHandler } from '@helpers/errorHandler'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -25,7 +26,7 @@ app.use((req: any, _res: any, next: any) => {
 })
 
 app.use('/health', (_req, res) => {
-  res.send('Auth microservice health ok')
+  res.send('Auth microservice health ok (v1)')
 })
 
 app.use('/', authRouter)

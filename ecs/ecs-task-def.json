@@ -1,0 +1,40 @@
+{
+  "family": "ctse-microservice-task",
+  "executionRoleArn": "arn:aws:iam::351545278583:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "ctse-microservice",
+      "image": "351545278583.dkr.ecr.us-east-1.amazonaws.com/ctse-microservice-repository:latest",
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "PORT",
+          "value": "5000"
+        },
+        {
+          "name": "MONGO_URI",
+          "value": "${{ secrets.MONGO_URI }}"
+        },
+        {
+          "name": "ACCESS_TOKEN_SECRET",
+          "value": "${{ secrets.ACCESS_TOKEN_SECRET }}"
+        },
+        {
+          "name": "REFRESH_TOKEN_SECRET",
+          "value": "${{ secrets.REFRESH_TOKEN_SECRET }}"
+        }
+      ]
+    }
+  ]
+}
