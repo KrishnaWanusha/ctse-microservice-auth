@@ -21,18 +21,20 @@
         {
           "name": "PORT",
           "value": "5000"
-        },
+        }
+      ],
+      "secrets": [
         {
           "name": "MONGO_URI",
-          "value": "${{ secrets.MONGO_URI }}"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:351545278583:secret:ctse-secrets-pyytzE"
         },
         {
           "name": "ACCESS_TOKEN_SECRET",
-          "value": "${{ secrets.ACCESS_TOKEN_SECRET }}"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:351545278583:secret:ctse-secrets-pyytzE"
         },
         {
           "name": "REFRESH_TOKEN_SECRET",
-          "value": "${{ secrets.REFRESH_TOKEN_SECRET }}"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:351545278583:secret:ctse-secrets-pyytzE"
         }
       ],
       "healthCheck": {
