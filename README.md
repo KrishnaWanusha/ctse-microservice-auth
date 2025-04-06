@@ -1,3 +1,1 @@
 # ctse-microservice-auth
-
-test
