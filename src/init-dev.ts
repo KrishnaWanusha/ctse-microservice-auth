@@ -26,7 +26,7 @@ app.use((req: any, _res: any, next: any) => {
 })
 
 app.use('/health', (_req, res) => {
-  res.send('Auth microservice health ok (v1)')
+  res.send('Auth microservice health ok (v2)')
 })
 
 app.use('/', authRouter)
