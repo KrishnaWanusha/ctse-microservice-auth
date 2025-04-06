@@ -12,6 +12,9 @@ env:
   ECS_SERVICE: ctse-microservice-service
   ECS_TASK_DEFINITION: ecs/ecs-task-def.json
   CONTAINER_NAME: ctse-microservice-container
+  MONGO_URI: ${{ secrets.MONGO_URI }}
+  ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+  REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
 
 jobs:
   deploy:
@@ -38,11 +41,15 @@ jobs:
           docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
+      - name: Render ECS Task Definition with Secrets
+        run: |
+          cat ecs/ecs-task-def.json | envsubst > ecs/task-def-with-secrets.json
+
       - name: Render new ECS task definition
         id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: ecs/task-def-with-secrets.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
 
