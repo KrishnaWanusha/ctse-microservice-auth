@@ -12,16 +12,14 @@ export type CustomReq<
   user?: any
 }
 
-export interface CustomRequestHandler<
+export type CustomRequestHandler<
   P = ParamsDictionary,
   ResBody = any,
   ReqBody = any,
   ReqQuery = ParsedQs,
   Locals extends Record<string, any> = Record<string, any>
-> {
-  (
-    req: CustomReq<P, ResBody, ReqBody, ReqQuery, Locals>,
-    res: Response<ResBody, Locals>,
-    next: NextFunction
-  ): Promise<any>
-}
+> = (
+  req: CustomReq<P, ResBody, ReqBody, ReqQuery, Locals>,
+  res: Response<ResBody, Locals>,
+  next: NextFunction
+) => Promise<any>

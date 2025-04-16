@@ -77,7 +77,7 @@ export const AuthenticateToken: (roles?: UserRoles[]) => RequestHandler =
   (roles) => (req: CustomReq, _res, next) => {
     try {
       const authHeader = req.headers.authorization
-      const token = authHeader && authHeader.split(' ')[1]
+      const token = authHeader?.split(' ')[1]
 
       if (!token) {
         throw new AppError(HttpStatus.UNAUTHORIZED, 'UNAUTHORIZED')
@@ -92,7 +92,7 @@ export const AuthenticateToken: (roles?: UserRoles[]) => RequestHandler =
               throw new AppError(HttpStatus.FORBIDDEN, 'FORBIDDEN')
             }
 
-            const user = await UserModel.findOne({ username: (payload as any).username })
+            const user = await UserModel.findOne({ username: payload.username })
 
             if (roles && roles.length > 0) {
               if (!checkPermissions(user as User, roles)) {

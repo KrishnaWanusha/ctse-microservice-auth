@@ -25,7 +25,7 @@ const login: RequestHandler = async (
 
     const user = await UserModel.findOne({ username })
 
-    if (!user || !(await validatePassword(password, user?.password!))) {
+    if (!user || !(await validatePassword(password, user?.password))) {
       throw new AppError(HttpStatus.BAD_REQUEST, 'Username or password incorrect')
     }
 
