@@ -68,14 +68,6 @@ jobs:
         run: |
           envsubst < $TASK_DEF_GATEWAY > ecs/gateway-task-def-processed.json
 
-      - name: Register new auth task definition
-        id: register-auth
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ecs/auth-task-def-processed.json
-          container-name: auth-microservice
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUTH }}:latest
-
       - name: Register new gateway task definition
         id: register-gateway
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -84,13 +76,13 @@ jobs:
           container-name: api-gateway
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_GATEWAY }}:latest
 
-      - name: Deploy to auth ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      - name: Register new auth task definition
+        id: register-auth
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          service: ${{ env.ECS_SERVICE_AUTH }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-auth.outputs.task-definition-arn }}
-          wait-for-service-stability: true
+          task-definition: ecs/auth-task-def-processed.json
+          container-name: auth-microservice
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUTH }}:latest
 
       - name: Deploy to gateway ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -98,4 +90,12 @@ jobs:
           service: ${{ env.ECS_SERVICE_GATEWAY }}
           cluster: ${{ env.ECS_CLUSTER }}
           task-definition: ${{ steps.register-gateway.outputs.task-definition-arn }}
+          wait-for-service-stability: true
+
+      - name: Deploy to auth ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          service: ${{ env.ECS_SERVICE_AUTH }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          task-definition: ${{ steps.register-auth.outputs.task-definition-arn }}
           wait-for-service-stability: true
