@@ -89,7 +89,7 @@ jobs:
         with:
           service: ${{ env.ECS_SERVICE_GATEWAY }}
           cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-gateway.outputs.task-definition-arn }}
+          task-definition: ${{ steps.register-gateway.outputs.task-definition }}
           wait-for-service-stability: true
 
       - name: Deploy to auth ECS service
@@ -97,5 +97,5 @@ jobs:
         with:
           service: ${{ env.ECS_SERVICE_AUTH }}
           cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-auth.outputs.task-definition-arn }}
+          task-definition: ${{ steps.register-auth.outputs.task-definition }}
           wait-for-service-stability: true
