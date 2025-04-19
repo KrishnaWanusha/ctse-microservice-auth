@@ -24,7 +24,7 @@
         },
         {
           "name": "AUTH_API",
-          "value": "http://auth-microservice:5001"
+          "value": "http://auth.ugg.local:5001"
         }
       ],
       "healthCheck": {
