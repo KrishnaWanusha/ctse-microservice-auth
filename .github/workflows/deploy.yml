@@ -47,12 +47,16 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to ECR
+      - name: Build, tag, and push images to ECR
         run: |
           IMAGE_TAG=latest
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          ECR_URI=${{ steps.login-ecr.outputs.registry }}
+
+          docker build -t $ECR_URI/$ECR_REPOSITORY-auth:$IMAGE_TAG ./auth-microservice
+          docker push $ECR_URI/$ECR_REPOSITORY-auth:$IMAGE_TAG
+
+          docker build -t $ECR_URI/$ECR_REPOSITORY-gateway:$IMAGE_TAG ./api-gateway
+          docker push $ECR_URI/$ECR_REPOSITORY-gateway:$IMAGE_TAG
 
       - name: Render ECS Task Definition with Secrets
         run: |
@@ -63,8 +67,11 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ecs/task-def-with-secrets.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+          container-name: api-gateway
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}-gateway:latest
+      - name: Update auth-microservice image
+        run: |
+          jq '.containerDefinitions |= map(if .name == "auth-microservice" then .image = "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}-auth:latest" else . end)' ecs/task-def-with-secrets.json > ecs/final-task-def.json
 
       - name: Deploy new task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
