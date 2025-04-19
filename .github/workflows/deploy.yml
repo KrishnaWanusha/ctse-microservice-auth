@@ -70,15 +70,19 @@ jobs:
 
       - name: Register new auth task definition
         id: register-auth
-        uses: aws-actions/amazon-ecs-register-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ecs/auth-task-def-processed.json
+          container-name: auth-microservice
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUTH }}:latest
 
       - name: Register new gateway task definition
         id: register-gateway
-        uses: aws-actions/amazon-ecs-register-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ecs/gateway-task-def-processed.json
+          container-name: api-gateway
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_GATEWAY }}:latest
 
       - name: Deploy to auth ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
