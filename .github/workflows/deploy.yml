@@ -7,11 +7,14 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: ctse-microservice-repository
+  ECR_URI: 351545278583.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY_AUTH: ctse-auth
+  ECR_REPOSITORY_GATEWAY: ctse-gateway
   ECS_CLUSTER: ctse-microservice-cluster
-  ECS_SERVICE: ctse-microservice-service
-  ECS_TASK_DEFINITION: ecs/ecs-task-def.json
-  CONTAINER_NAME: ctse-microservice-container
+  ECS_SERVICE_AUTH: ctse-auth-service
+  ECS_SERVICE_GATEWAY: ctse-gateway-service
+  TASK_DEF_AUTH: ecs/auth-task-def.json
+  TASK_DEF_GATEWAY: ecs/gateway-task-def.json
   MONGO_URI: ${{ secrets.MONGO_URI }}
   ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
   REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
@@ -47,36 +50,48 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push images to ECR
+      - name: Build, tag, and push auth image
         run: |
-          IMAGE_TAG=latest
-          ECR_URI=${{ steps.login-ecr.outputs.registry }}
+          docker build -t $ECR_URI/$ECR_REPOSITORY_AUTH:latest ./auth-microservice
+          docker push $ECR_URI/$ECR_REPOSITORY_AUTH:latest
 
-          docker build -t $ECR_URI/$ECR_REPOSITORY-auth:$IMAGE_TAG ./auth-microservice
-          docker push $ECR_URI/$ECR_REPOSITORY-auth:$IMAGE_TAG
-
-          docker build -t $ECR_URI/$ECR_REPOSITORY-gateway:$IMAGE_TAG ./api-gateway
-          docker push $ECR_URI/$ECR_REPOSITORY-gateway:$IMAGE_TAG
-
-      - name: Render ECS Task Definition with Secrets
+      - name: Build, tag, and push gateway image
         run: |
-          cat ecs/ecs-task-def.json | envsubst > ecs/task-def-with-secrets.json
+          docker build -t $ECR_URI/$ECR_REPOSITORY_GATEWAY:latest ./api-gateway
+          docker push $ECR_URI/$ECR_REPOSITORY_GATEWAY:latest
 
-      - name: Render new ECS task definition
-        id: render
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+      - name: Inject secrets into auth task def
+        run: |
+          envsubst < $TASK_DEF_AUTH > ecs/auth-task-def-processed.json
+
+      - name: Inject secrets into gateway task def
+        run: |
+          envsubst < $TASK_DEF_GATEWAY > ecs/gateway-task-def-processed.json
+
+      - name: Register new auth task definition
+        id: register-auth
+        uses: aws-actions/amazon-ecs-register-task-definition@v1
         with:
-          task-definition: ecs/task-def-with-secrets.json
-          container-name: api-gateway
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}-gateway:latest
-      - name: Update auth-microservice image
-        run: |
-          jq '.containerDefinitions |= map(if .name == "auth-microservice" then .image = "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}-auth:latest" else . end)' ecs/task-def-with-secrets.json > ecs/final-task-def.json
+          task-definition: ecs/auth-task-def-processed.json
 
-      - name: Deploy new task definition
+      - name: Register new gateway task definition
+        id: register-gateway
+        uses: aws-actions/amazon-ecs-register-task-definition@v1
+        with:
+          task-definition: ecs/gateway-task-def-processed.json
+
+      - name: Deploy to auth ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          service: ${{ env.ECS_SERVICE }}
+          service: ${{ env.ECS_SERVICE_AUTH }}
           cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.render.outputs.task-definition }}
+          task-definition: ${{ steps.register-auth.outputs.task-definition-arn }}
+          wait-for-service-stability: true
+
+      - name: Deploy to gateway ECS service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          service: ${{ env.ECS_SERVICE_GATEWAY }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          task-definition: ${{ steps.register-gateway.outputs.task-definition-arn }}
           wait-for-service-stability: true
