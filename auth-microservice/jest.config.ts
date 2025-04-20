@@ -5,8 +5,7 @@ const config: Config = {
   testTimeout: 45000,
   preset: 'ts-jest',
   modulePaths: ['<rootDir>'],
-  modulePathIgnorePatterns: ['__mocks__'],
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts']
+  modulePathIgnorePatterns: ['__mocks__']
 }
 
 export default config
