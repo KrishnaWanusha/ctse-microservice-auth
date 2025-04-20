@@ -20,24 +20,14 @@ env:
   REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
 
 jobs:
-  sonarcloud:
-    name: SonarCloud Scan
+  build:
+    name: Build Docker Images
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: sonarcloud
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -46,6 +36,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+  cloudsonar:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  push-docker:
+    name: Push Docker Images
+    runs-on: ubuntu-latest
+    needs: cloudsonar
+    if: success()
+    steps:
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -60,42 +71,45 @@ jobs:
           docker build -t $ECR_URI/$ECR_REPOSITORY_GATEWAY:latest ./api-gateway
           docker push $ECR_URI/$ECR_REPOSITORY_GATEWAY:latest
 
-      - name: Inject secrets into auth task def
-        run: |
-          envsubst < $TASK_DEF_AUTH > ecs/auth-task-def-processed.json
+  deploy:
+    name: Deploy to ECS
+    runs-on: ubuntu-latest
+    needs: push-docker
+    if: success()
+    strategy:
+      matrix:
+        service: [auth, gateway]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Inject secrets into gateway task def
-        run: |
-          envsubst < $TASK_DEF_GATEWAY > ecs/gateway-task-def-processed.json
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Register new gateway task definition
-        id: register-gateway
+      - name: Inject secrets into task def
+        run: |
+          if [ "${{ matrix.service }}" == "auth" ]; then
+            envsubst < $TASK_DEF_AUTH > ecs/auth-task-def-processed.json
+          else
+            envsubst < $TASK_DEF_GATEWAY > ecs/gateway-task-def-processed.json
+          fi
+
+      - name: Register new task definition
+        id: register-task
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ecs/gateway-task-def-processed.json
-          container-name: api-gateway
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_GATEWAY }}:latest
+          task-definition: ecs/${{ matrix.service }}-task-def-processed.json
+          container-name: ${{ matrix.service }}-microservice
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env["ECR_REPOSITORY_${{ matrix.service | upper }}"] }}:latest
 
-      - name: Register new auth task definition
-        id: register-auth
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ecs/auth-task-def-processed.json
-          container-name: auth-microservice
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_AUTH }}:latest
-
-      - name: Deploy to gateway ECS service
+      - name: Deploy to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          service: ${{ env.ECS_SERVICE_GATEWAY }}
+          service: ${{ env["ECS_SERVICE_${{ matrix.service | upper }}"] }}
           cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-gateway.outputs.task-definition }}
-          wait-for-service-stability: true
-
-      - name: Deploy to auth ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          service: ${{ env.ECS_SERVICE_AUTH }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-auth.outputs.task-definition }}
+          task-definition: ${{ steps.register-task.outputs.task-definition }}
           wait-for-service-stability: true

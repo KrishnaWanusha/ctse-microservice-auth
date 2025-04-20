@@ -16,10 +16,12 @@ FROM node:18.5 AS runner
 
 WORKDIR /app
 
-COPY --from=builder build/package*.json .
-COPY --from=builder build/node_modules node_modules/
-COPY --from=builder build/tsconfig.json tsconfig.json
-COPY --from=builder build/dist dist/
+USER node
+
+COPY --from=builder /build/package*.json .
+COPY --from=builder /build/node_modules node_modules/
+COPY --from=builder /build/tsconfig.json tsconfig.json
+COPY --from=builder /build/dist dist/
 
 EXPOSE 5001
 
