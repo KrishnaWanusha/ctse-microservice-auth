@@ -50,13 +50,13 @@ npm run dev
 
 ## 🧪 API Endpoints
 
-| Method | Endpoint         | Description          |
-| ------ | ---------------- | -------------------- |
-| GET    | `/health`        | Health check (v2)    |
-| GET    | `/`              | Auth service base    |
-| POST   | `/signup`        | User signup          |
-| POST   | `/login`         | User login           |
-| POST   | `/refresh-token` | Refresh access token |
+| Method | Endpoint              | Description          |
+| ------ | --------------------- | -------------------- |
+| GET    | `/health`             | Gateway Health check |
+| GET    | `/auth/health`        | Auth Health check    |
+| POST   | `/auth/signup`        | User signup          |
+| POST   | `/auth/login`         | User login           |
+| POST   | `/auth/refresh-token` | Refresh access token |
 
 ---
 
