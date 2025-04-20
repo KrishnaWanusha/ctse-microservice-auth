@@ -72,50 +72,50 @@ jobs:
           docker push $ECR_URI/$ECR_REPOSITORY_GATEWAY:latest
 
     deploy:
-    name: Deploy to ECS
-    runs-on: ubuntu-latest
-    needs: push-docker
-    if: success()
-    strategy:
-      matrix:
-        service: [auth, gateway]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      name: Deploy to ECS
+      runs-on: ubuntu-latest
+      needs: push-docker
+      if: success()
+      strategy:
+        matrix:
+          service: [auth, gateway]
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-region: ${{ env.AWS_REGION }}
 
-      - name: Inject secrets into task definition
-        run: |
-          if [ "${{ matrix.service }}" == "auth" ]; then
-            envsubst < ecs/auth-task-def.json > ecs/task-def.json
-            echo "REPO=$ECR_URI/$ECR_REPOSITORY_AUTH:latest" >> $GITHUB_ENV
-            echo "CONTAINER=auth-microservice" >> $GITHUB_ENV
-            echo "SERVICE=$ECS_SERVICE_AUTH" >> $GITHUB_ENV
-          else
-            envsubst < ecs/gateway-task-def.json > ecs/task-def.json
-            echo "REPO=$ECR_URI/$ECR_REPOSITORY_GATEWAY:latest" >> $GITHUB_ENV
-            echo "CONTAINER=gateway-microservice" >> $GITHUB_ENV
-            echo "SERVICE=$ECS_SERVICE_GATEWAY" >> $GITHUB_ENV
-          fi
+        - name: Inject secrets into task definition
+          run: |
+            if [ "${{ matrix.service }}" == "auth" ]; then
+              envsubst < ecs/auth-task-def.json > ecs/task-def.json
+              echo "REPO=$ECR_URI/$ECR_REPOSITORY_AUTH:latest" >> $GITHUB_ENV
+              echo "CONTAINER=auth-microservice" >> $GITHUB_ENV
+              echo "SERVICE=$ECS_SERVICE_AUTH" >> $GITHUB_ENV
+            else
+              envsubst < ecs/gateway-task-def.json > ecs/task-def.json
+              echo "REPO=$ECR_URI/$ECR_REPOSITORY_GATEWAY:latest" >> $GITHUB_ENV
+              echo "CONTAINER=gateway-microservice" >> $GITHUB_ENV
+              echo "SERVICE=$ECS_SERVICE_GATEWAY" >> $GITHUB_ENV
+            fi
 
-      - name: Register new task definition
-        id: register-task
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ecs/task-def.json
-          container-name: ${{ env.CONTAINER }}
-          image: ${{ env.REPO }}
+        - name: Register new task definition
+          id: register-task
+          uses: aws-actions/amazon-ecs-render-task-definition@v1
+          with:
+            task-definition: ecs/task-def.json
+            container-name: ${{ env.CONTAINER }}
+            image: ${{ env.REPO }}
 
-      - name: Deploy to ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          service: ${{ env.SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          task-definition: ${{ steps.register-task.outputs.task-definition }}
-          wait-for-service-stability: true
+        - name: Deploy to ECS service
+          uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+          with:
+            service: ${{ env.SERVICE }}
+            cluster: ${{ env.ECS_CLUSTER }}
+            task-definition: ${{ steps.register-task.outputs.task-definition }}
+            wait-for-service-stability: true
