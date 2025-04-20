@@ -94,7 +94,7 @@ jobs:
           else
             envsubst < ecs/gateway-task-def.json > ecs/task-def.json
             echo "REPO=$ECR_URI/$ECR_REPOSITORY_GATEWAY:latest" >> $GITHUB_ENV
-            echo "CONTAINER=gateway-microservice" >> $GITHUB_ENV
+            echo "CONTAINER=api-gateway" >> $GITHUB_ENV
             echo "SERVICE=$ECS_SERVICE_GATEWAY" >> $GITHUB_ENV
           fi
 
