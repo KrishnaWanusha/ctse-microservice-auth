@@ -18,7 +18,7 @@ const authProxy = createProxyMiddleware({
 })
 
 apiGateway.use('/health', (_req, res) => {
-  res.send('API Gateway health ok (v1)')
+  res.send('API Gateway health ok (v2)')
 })
 
 apiGateway.use((req: any, _res: any, next: any) => {
