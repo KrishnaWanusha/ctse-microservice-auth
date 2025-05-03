@@ -35,7 +35,7 @@ const login: RequestHandler = async (
     const accessToken = generateAccessToken(payload)
     const refreshToken = generateRefreshToken(payload)
 
-    res.status(HttpStatus.OK).json({ accessToken, refreshToken })
+    res.status(HttpStatus.OK).json({ username, accessToken, refreshToken })
   } catch (e: any) {
     next(e)
   }
