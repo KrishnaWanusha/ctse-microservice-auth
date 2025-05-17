@@ -10,7 +10,7 @@ import { connectDB } from './config/db'
 dotenv.config()
 
 // eslint-disable-next-line no-console
-console.log('Starting Auth Microservice...')
+console.log('Starting Auth Microservice....')
 
 connectDB()
 
