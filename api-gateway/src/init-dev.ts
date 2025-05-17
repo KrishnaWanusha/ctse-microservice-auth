@@ -18,8 +18,9 @@ const authProxy = createProxyMiddleware({
 })
 
 apiGateway.use('/health', (_req, res) => {
-  res.send('API Gateway health ok (v1)')
+  res.send('API Gateway health ok (v2)')
 })
+// this is a comment
 
 apiGateway.use((req: any, _res: any, next: any) => {
   // eslint-disable-next-line no-console
