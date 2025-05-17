@@ -11,7 +11,7 @@ env:
   ECR_REPOSITORY_AUTH: ctse-auth
   ECR_REPOSITORY_GATEWAY: ctse-gateway
   ECS_CLUSTER: ctse-microservice-cluster
-  ECS_SERVICE_AUTH: ctse-auth-task-service-tq2buusp
+  ECS_SERVICE_AUTH: ctse-auth-service-ms
   ECS_SERVICE_GATEWAY: ctse-gateway-service
   TASK_DEF_AUTH: ecs/auth-task-def.json
   TASK_DEF_GATEWAY: ecs/gateway-task-def.json
