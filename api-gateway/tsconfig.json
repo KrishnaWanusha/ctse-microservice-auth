@@ -31,6 +31,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", ".eslintrc.js", "__tests__/**/*", "jest.config.ts"],
+  "include": ["src/**/*", ".eslintrc.js"],
   "exclude": ["./dist/**/*", "./node_modules/**/*"]
 }
